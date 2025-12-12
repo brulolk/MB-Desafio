@@ -15,14 +15,19 @@ struct ExchangeDTO: Decodable {
     let id: Int
     let name: String
     let slug: String
-    let isActive: Int // A API retorna 1 para ativo
+    let isActive: Int
+    let firstHistoricalData: String?
     
     func toDomain() -> Exchange {
+        let dateDisplay = firstHistoricalData != nil ? String(firstHistoricalData!.prefix(10)) : nil
+        
         return Exchange(
             id: id,
             name: name,
             slug: slug,
-            isActive: isActive == 1
+            isActive: isActive == 1,
+            volume: nil, // Volume será nil devido limitação da API no free
+            dateLaunched: dateDisplay
         )
     }
 }

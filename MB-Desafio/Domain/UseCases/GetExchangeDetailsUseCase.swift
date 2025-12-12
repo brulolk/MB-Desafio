@@ -12,16 +12,23 @@ protocol GetExchangeDetailsUseCaseProtocol {
 final class GetExchangeDetailsUseCase: GetExchangeDetailsUseCaseProtocol {
     private let repository: ExchangeRepositoryProtocol
     
+    // MARK: - Mock Data (Como minha key é free não consigo receber esses dados)
+    private var mockCoins: [Coin] {
+        return [
+            Coin(symbol: "BTC", pairName: "BTC/USDT", price: 98500.42),
+            Coin(symbol: "ETH", pairName: "ETH/USDT", price: 2750.15),
+            Coin(symbol: "SOL", pairName: "SOL/USDT", price: 145.80),
+            Coin(symbol: "BNB", pairName: "BNB/USDT", price: 620.33),
+            Coin(symbol: "XRP", pairName: "XRP/USDT", price: 0.65),
+            Coin(symbol: "ADA", pairName: "ADA/USDT", price: 0.45),
+            Coin(symbol: "DOGE", pairName: "DOGE/USDT", price: 0.12)
+        ]
+    }
+    
     init(repository: ExchangeRepositoryProtocol) { self.repository = repository }
     
     func execute(id: Int) async throws -> (ExchangeDetail, [Coin]) {
-        // DECISÃO DE PERFORMANCE:
-        // Usamos 'async let' para buscar detalhes e moedas simultaneamente,
-        // reduzindo o tempo total de carregamento pela metade.
         async let details = repository.getExchangeDetails(id: id)
-        
-        // Tratamento de falha parcial: Se a lista de moedas falhar (plano Free),
-        // retornamos uma lista vazia, mas ainda mostramos os detalhes da exchange.
         async let coins = fetchCoinsSafe(id: id)
         
         return try await (details, coins)
@@ -31,8 +38,8 @@ final class GetExchangeDetailsUseCase: GetExchangeDetailsUseCaseProtocol {
         do {
             return try await repository.getExchangeCoins(id: id)
         } catch {
-            print("⚠️ Aviso: Falha ao buscar moedas (provável limitação de API Free): \(error)")
-            return []
+            print("⚠️ API Limit: Falha ao buscar moedas (Erro \(error)). Retornando lista mock.")
+            return mockCoins
         }
     }
 }

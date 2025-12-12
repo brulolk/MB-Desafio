@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct Exchange {
+struct Exchange: Identifiable {
     let id: Int
     let name: String
     let slug: String
     let isActive: Bool
-    // Adicionaremos mais campos (logo, volume) conforme avançarmos,
-    // mas o endpoint /map retorna dados limitados.
+    let volume: Double?
+    let dateLaunched: String?
 }

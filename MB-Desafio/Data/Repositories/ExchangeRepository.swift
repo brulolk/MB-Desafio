@@ -19,7 +19,22 @@ final class ExchangeRepository: ExchangeRepositoryProtocol {
         let endpoint = CoinMarketCapEndpoint.listExchanges
         let responseDTO = try await networkService.request(endpoint: endpoint, responseModel: ExchangeListResponseDTO.self)
         
-        // Mapeia a lista de DTOs para Entidades de Domínio
         return responseDTO.data.map { $0.toDomain() }
+    }
+    
+    func getExchangeDetails(id: Int) async throws -> ExchangeDetail {
+        let endpoint = CoinMarketCapEndpoint.exchangeDetails(id: id)
+        let response = try await networkService.request(endpoint: endpoint, responseModel: ExchangeInfoResponseDTO.self)
+        
+        guard let detailDTO = response.data[String(id)] else {
+            throw NetworkError.decode
+        }
+        return detailDTO.toDomain()
+    }
+        
+    func getExchangeCoins(id: Int) async throws -> [Coin] {
+        let endpoint = CoinMarketCapEndpoint.exchangeMarketPairs(id: id)
+        let response = try await networkService.request(endpoint: endpoint, responseModel: MarketPairsResponseDTO.self)
+        return response.data.marketPairs.map { $0.toDomain() }
     }
 }

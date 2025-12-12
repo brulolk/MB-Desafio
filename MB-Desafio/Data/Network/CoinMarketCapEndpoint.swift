@@ -9,24 +9,24 @@ import Foundation
 
 enum CoinMarketCapEndpoint: Endpoint {
     case listExchanges
-    case exchangeDetails(id: String)
+    case exchangeDetails(id: Int)
+    case exchangeMarketPairs(id: Int)
     
     var path: String {
         switch self {
-        case .listExchanges:
-            return "/v1/exchange/map" // Endpoint leve para listagem
-        case .exchangeDetails:
-            return "/v1/exchange/info" // Detalhes completos
+        case .listExchanges: 
+            return "/v1/exchange/map"
+        case .exchangeDetails: 
+            return "/v1/exchange/info"
+        case .exchangeMarketPairs: 
+            return "/v1/exchange/market-pairs/latest"
         }
     }
     
-    var method: HTTPMethod {
-        return .get
-    }
+    var method: HTTPMethod { .get }
     
     var header: [String : String]? {
-        // Injeta a chave de segurança do Secrets.swift
-        return ["X-CMC_PRO_API_KEY": Secrets.coinMarketCapKey]
+        ["X-CMC_PRO_API_KEY": Secrets.coinMarketCapKey]
     }
     
     var body: [String : String]? {
@@ -36,13 +36,14 @@ enum CoinMarketCapEndpoint: Endpoint {
     var queryParams: [String : String]? {
         switch self {
         case .listExchanges:
-            return [
-                "listing_status": "active",
-                "sort": "volume_24h", // Requisito: trazer relevantes primeiro
-                "limit": "50" // Vamos limitar para não estourar a cota grátis
-            ]
+            return ["listing_status": "active",
+                    "sort": "volume_24h",
+                    "limit": "50"]
         case .exchangeDetails(let id):
-            return ["id": id]
+            return ["id": String(id)]
+        case .exchangeMarketPairs(let id):
+            return ["id": String(id),
+                    "limit": "20"] // Top 20 moedas
         }
     }
 }
