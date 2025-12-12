@@ -5,7 +5,7 @@
 //  Created by Bruno Vinicius on 11/12/25.
 //
 
-struct ExchangeDetail: Sendable {
+struct ExchangeDetail: Identifiable {
     let id: Int
     let name: String
     let logoURL: String
@@ -16,7 +16,7 @@ struct ExchangeDetail: Sendable {
     let takerFee: Double?
 }
 
-struct Coin: Sendable, Identifiable {
+struct Coin: Identifiable {
     var id: String { pairName }
     let symbol: String
     let pairName: String

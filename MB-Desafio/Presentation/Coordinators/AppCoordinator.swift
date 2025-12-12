@@ -19,6 +19,7 @@ final class AppCoordinator: Coordinator {
     private let window: UIWindow
     
     private let exchangeRepository: ExchangeRepositoryProtocol
+    private let favoritesRepository: FavoritesRepositoryProtocol
     
     init(window: UIWindow) {
         self.window = window
@@ -32,9 +33,12 @@ final class AppCoordinator: Coordinator {
         
         self.navigationController.navigationBar.standardAppearance = appearance
         self.navigationController.navigationBar.scrollEdgeAppearance = appearance
-        self.navigationController.navigationBar.prefersLargeTitles = true
+        self.navigationController.navigationBar.prefersLargeTitles = false
+        
+        self.navigationController.navigationBar.tintColor = .customOrange
         
         self.exchangeRepository = ExchangeRepository()
+        self.favoritesRepository = FavoritesRepository()
     }
     
     func start() {
@@ -47,10 +51,17 @@ final class AppCoordinator: Coordinator {
     
     private func showList() {
         let useCase = GetExchangesUseCase(repository: exchangeRepository)
-        let viewModel = ExchangeListViewModel(getExchangesUseCase: useCase)
+        let viewModel = ExchangeListViewModel(getExchangesUseCase: useCase, favoritesRepository: favoritesRepository)
         let viewController = ExchangeListViewController(viewModel: viewModel)
         viewController.coordinator = self
         navigationController.pushViewController(viewController, animated: false)
+    }
+    
+    func showDetails(exchangeId: Int) {
+        let useCase = GetExchangeDetailsUseCase(repository: exchangeRepository)
+        let viewModel = ExchangeDetailViewModel(exchangeId: exchangeId, useCase: useCase)
+        let viewController = ExchangeDetailViewController(viewModel: viewModel)
+        navigationController.pushViewController(viewController, animated: true)
     }
     
 }
