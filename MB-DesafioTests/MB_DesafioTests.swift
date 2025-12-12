@@ -8,29 +8,104 @@
 import XCTest
 @testable import MB_Desafio
 
+@MainActor
 final class MB_DesafioTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    
+    var viewModel: ExchangeListViewModel!
+    var mockRepository: MockExchangeRepository!
+    var mockFavorites: MockFavoritesRepository!
+    var useCase: GetExchangesUseCase!
+    
+    override func setUp() {
+        super.setUp()
+        mockRepository = MockExchangeRepository()
+        mockFavorites = MockFavoritesRepository()
+        useCase = GetExchangesUseCase(repository: mockRepository)
+        viewModel = ExchangeListViewModel(
+            getExchangesUseCase: useCase,
+            favoritesRepository: mockFavorites
+        )
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    
+    override func tearDown() {
+        viewModel = nil
+        mockRepository = nil
+        mockFavorites = nil
+        useCase = nil
+        super.tearDown()
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    func testFetchExchanges_Success() async {
+        mockRepository.shouldReturnError = false
+        let expectation = expectation(description: "Deve carregar lista")
+        
+        viewModel.onStateChanged = { state in
+            if case .success = state {
+                expectation.fulfill()
+            }
         }
+        
+        viewModel.fetchExchanges()
+        await fulfillment(of: [expectation], timeout: 2.0)
+        
+        XCTAssertEqual(viewModel.displayedExchanges.count, 3)
+        XCTAssertEqual(viewModel.displayedExchanges.first?.name, "Binance")
     }
-
+    
+    func testFetchExchanges_Failure() async {
+        mockRepository.shouldReturnError = true
+        let expectation = expectation(description: "Deve retornar erro")
+        
+        viewModel.onStateChanged = { state in
+            if case .error = state {
+                expectation.fulfill()
+            }
+        }
+        
+        viewModel.fetchExchanges()
+        await fulfillment(of: [expectation], timeout: 2.0)
+        XCTAssertTrue(viewModel.displayedExchanges.isEmpty)
+    }
+    
+    func testFavoritesFilter() async {
+        mockRepository.shouldReturnError = false
+        let loadExpectation = expectation(description: "Dados carregados")
+        
+        viewModel.onStateChanged = { state in
+            if case .success = state { loadExpectation.fulfill() }
+        }
+        
+        viewModel.fetchExchanges()
+        await fulfillment(of: [loadExpectation], timeout: 1.0)
+        
+        viewModel.onStateChanged = nil
+        
+        viewModel.toggleFavorite(exchangeId: 1)
+        XCTAssertTrue(mockFavorites.isFavorite(id: 1))
+        
+        viewModel.filterChanged(to: .favorites)
+        
+        XCTAssertEqual(viewModel.displayedExchanges.count, 1)
+        XCTAssertEqual(viewModel.displayedExchanges.first?.name, "Binance")
+    }
+    
+    func testSearchFeature() async {
+        let loadExpectation = expectation(description: "Dados carregados")
+        viewModel.onStateChanged = { state in
+            if case .success = state { loadExpectation.fulfill() }
+        }
+        
+        viewModel.fetchExchanges()
+        await fulfillment(of: [loadExpectation], timeout: 1.0)
+        
+        viewModel.onStateChanged = nil
+        
+        viewModel.search(query: "Kraken")
+        
+        XCTAssertEqual(viewModel.displayedExchanges.count, 1)
+        XCTAssertEqual(viewModel.displayedExchanges.first?.name, "Kraken")
+        
+        viewModel.search(query: "")
+        XCTAssertEqual(viewModel.displayedExchanges.count, 3)
+    }
 }

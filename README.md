@@ -38,6 +38,7 @@ O projeto segue a arquitetura **MVVM-C (Model-View-ViewModel-Coordinator)** para
 - **UI:** UIKit (ViewCode)
 - **Concorrência:** Swift Concurrency (`async/await`, `@MainActor`)
 - **Navegação:** Coordinator Pattern
+- **Testes:** XCTest (Unit Tests)
 
 ## ⚙️ Como Rodar o Projeto
 
